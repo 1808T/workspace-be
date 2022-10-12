@@ -4,7 +4,8 @@
 |  Server Side     |
 | ---------------- |
 |  expressjs       |
-|  mongoose        |
+|  mongodb         |
+|  joi             |
 |  cors            |
 |  dotenv          |
 |  jsonwebtoken    |
