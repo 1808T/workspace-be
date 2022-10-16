@@ -51,11 +51,9 @@ const signIn = async (data) => {
       { email },
       {
         projection: {
-          username: 1,
-          email: 1,
-          password: 1,
-          fullName: 1,
-          avatar: 1,
+          boardList: 0,
+          friends: 0,
+          isAdmin: 0,
         },
       },
     );

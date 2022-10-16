@@ -17,6 +17,7 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
   try {
     const { user, matchPassword, token } = await userService.signIn(req.body);
+
     if (!user)
       return res
         .status(httpStatusCode.BAD_REQUEST)
