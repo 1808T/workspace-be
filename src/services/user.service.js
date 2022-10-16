@@ -54,6 +54,8 @@ const signIn = async (data) => {
           boardList: 0,
           friends: 0,
           isAdmin: 0,
+          createdAt: 0,
+          updatedAt: 0,
         },
       },
     );
