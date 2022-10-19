@@ -45,7 +45,7 @@ const signUp = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST).json({
-      message: new Error(error).message,
+      message: error.message,
     });
   }
 };
@@ -68,9 +68,11 @@ const signIn = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST).json({
-      message: new Error(error).message,
+      message: error.message,
     });
   }
 };
 
-export const userValidation = { signUp, signIn };
+const userValidation = { signUp, signIn };
+
+export default userValidation;
