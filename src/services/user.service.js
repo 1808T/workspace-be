@@ -1,15 +1,8 @@
 import bcrypt from 'bcrypt';
-import userSchema from '../models/user.model.js';
+import userModel from '../models/user.model.js';
 import { db } from '../configs/db.config.js';
-import { authMiddleware } from '../middleware/auth.middleware.js';
-
-const validateUserSchema = async (data) => {
-  try {
-    return await userSchema.validateAsync(data, { abortEarly: false });
-  } catch (error) {
-    console.log(error.message);
-  }
-};
+import authMiddleware from '../middleware/auth.middleware.js';
+import validateSchema from '../utils/validate-schema.util.js';
 
 const hashPassword = async (password) => {
   const saltRounds = 10;
@@ -24,21 +17,22 @@ const comparePassword = async (string, hashedPassword) => {
 
 const signUp = async (data) => {
   try {
-    const value = await validateUserSchema(data);
-    const { password } = value;
+    const validatedData = await validateSchema(userModel, data);
+    const { password } = validatedData;
     const hashedPassword = await hashPassword(password);
 
-    delete value.repeatPassword;
-    value.password = hashedPassword;
+    delete validatedData.repeatPassword;
+    validatedData.password = hashedPassword;
 
-    const result = await db.users.insertOne(value);
-    if (result.insertedId) {
+    const result = await db.users.insertOne(validatedData);
+    if (result.acknowledged) {
       const newUser = await db.users.findOne({
         _id: result.insertedId,
       });
       return newUser;
     }
   } catch (error) {
+    console.log(error);
     throw new Error(error);
   }
 };
@@ -68,8 +62,11 @@ const signIn = async (data) => {
     }
     return result;
   } catch (error) {
+    console.log(error);
     throw new Error(error);
   }
 };
 
-export const userService = { signUp, signIn };
+const userService = { signUp, signIn };
+
+export default userService;

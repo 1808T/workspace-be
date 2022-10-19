@@ -32,7 +32,7 @@ const verifyToken = async (req, res, next) => {
         { _id: userId },
         { projection: { password: 0 } },
       );
-      req.user = user;
+      req.userId = user._id;
       next();
     });
   } catch (error) {
@@ -42,4 +42,6 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-export const authMiddleware = { generateToken, verifyToken };
+const authMiddleware = { generateToken, verifyToken };
+
+export default authMiddleware;

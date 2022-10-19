@@ -1,5 +1,5 @@
 import httpStatusCode from '../utils/constants.util.js';
-import { userService } from '../services/user.service.js';
+import userService from '../services/user.service.js';
 
 const signUp = async (req, res) => {
   try {
@@ -40,4 +40,6 @@ const signIn = async (req, res) => {
   }
 };
 
-export const userController = { signUp, signIn };
+const userController = { signUp, signIn };
+
+export default userController;

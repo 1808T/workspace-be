@@ -1,12 +1,14 @@
 import Joi from 'joi';
 
-const boardSchema = Joi.object({
-  title: Joi.string().min(3).max(32).required(),
-  listOrder: Joi.array().items(Joi.string()).default([]),
+const boardModel = Joi.object({
+  title: Joi.string().min(3).max(32).trim().required(),
+  owner: Joi.string().required(),
+  listsOrder: Joi.array().items(Joi.string()).default([]),
   members: Joi.array().items(Joi.string()).default([]),
   createdAt: Joi.date().timestamp().default(Date.now()),
-  updateAt: Joi.date().timestamp().default(null),
+  updatedAt: Joi.date().timestamp().default(null),
   status: Joi.string().default('public'),
+  _destroy: Joi.boolean().default(false),
 });
 
-export default boardSchema;
+export default boardModel;

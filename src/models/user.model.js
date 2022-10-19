@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const userSchema = Joi.object({
+const userModel = Joi.object({
   username: Joi.string().alphanum().min(3).max(32).required(),
   email: Joi.string()
     .trim()
@@ -21,4 +21,4 @@ const userSchema = Joi.object({
   updatedAt: Joi.date().timestamp().default(null),
 });
 
-export default userSchema;
+export default userModel;
