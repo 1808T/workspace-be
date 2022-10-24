@@ -28,6 +28,7 @@ export const connectToDatabase = async () => {
     db.boards = database.collection('boards');
     db.lists = database.collection('lists');
     db.cards = database.collection('cards');
+    db.chats = database.collection('chats');
     db.messages = database.collection('messages');
     db.logs = database.collection('logs');
     db.comments = database.collection('comments');

@@ -19,10 +19,10 @@ const createCard = async (req, res) => {
   }
 };
 
-const updateCardTitle = async (req, res) => {
+const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedList = await cardService.updateCardTitle(id, req.body);
+    const updatedList = await cardService.updateCard(id, req.body);
 
     res.status(httpStatusCode.OK).json({
       message: 'Successfully updated card.',
@@ -55,6 +55,97 @@ const deleteCard = async (req, res) => {
   }
 };
 
-const cardController = { createCard, updateCardTitle, deleteCard };
+const searchCards = async (req, res) => {
+  const { query } = req.body;
+  const userId = req.userId;
+  try {
+    const searchedCards = await cardService.searchCards(query, userId);
+    if (searchedCards.length === 0) {
+      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
+    } else {
+      res
+        .status(httpStatusCode.OK)
+        .json({ message: 'Successfully search cards.', searchedCards });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getAllCards = async (req, res) => {
+  try {
+    const allCards = await cardService.getAllCards(req.userId);
+
+    if (allCards.length === 0) {
+      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
+    } else {
+      res
+        .status(httpStatusCode.OK)
+        .json({ message: 'Successfully get all cards.', allCards });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getTodayDueCards = async (req, res) => {
+  try {
+    const todayCards = await cardService.getTodayDueCards(req.userId);
+
+    if (todayCards.length === 0) {
+      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
+    } else {
+      res
+        .status(httpStatusCode.OK)
+        .json({ message: 'Successfully get all today cards.', todayCards });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getMonthlyDoneCards = async (req, res) => {
+  try {
+    const { allCardsCurrentYear, monthlyDoneCards } =
+      await cardService.getMonthlyDoneCards(req.userId);
+
+    if (allCardsCurrentYear.length === 0) {
+      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
+    } else {
+      res.status(httpStatusCode.OK).json({
+        message: 'Successfully get all this month cards.',
+        monthlyDoneCards,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const cardController = {
+  createCard,
+  updateCard,
+  deleteCard,
+  searchCards,
+  getAllCards,
+  getTodayDueCards,
+  getMonthlyDoneCards,
+};
 
 export default cardController;

@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import boardModel from '../models/board.model.js';
+import userService from './user.service.js';
 import { db } from '../configs/db.config.js';
 import validateSchema from '../utils/validate-schema.util.js';
 
@@ -7,11 +8,22 @@ const createBoard = async (data) => {
   try {
     const validatedData = await validateSchema(boardModel, data);
     validatedData.owner = new ObjectId(validatedData.owner);
+    if (validatedData.members) {
+      validatedData.members.forEach(
+        (member, i) => (validatedData.members[i] = new ObjectId(member)),
+      );
+    }
+    validatedData.members.unshift(validatedData.owner);
     const result = await db.boards.insertOne(validatedData);
     if (result.acknowledged) {
-      return await db.boards.findOne({
+      const newBoard = await db.boards.findOne({
         _id: result.insertedId,
       });
+      const updatedUser = await userService.updateBoardList(
+        newBoard.owner,
+        newBoard._id,
+      );
+      return { newBoard, updatedUser };
     }
   } catch (error) {
     console.log(error);
@@ -37,11 +49,11 @@ const updateListsOrder = async (boardId, listId) => {
   }
 };
 
-const updateBoardTitle = async (id, data) => {
+const updateBoardTitle = async (boardId, data) => {
   try {
     const updateData = { ...data, updatedAt: Date.now() };
     const result = await db.boards.findOneAndUpdate(
-      { _id: new ObjectId(id) },
+      { _id: new ObjectId(boardId) },
       { $set: updateData },
       { returnDocument: 'after' },
     );
@@ -75,11 +87,33 @@ const deleteBoard = async (id) => {
   }
 };
 
+const getYourBoards = async (id) => {
+  try {
+    return await db.boards.find({ owner: id, _destroy: false }).toArray();
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const getInvitedBoards = async (id) => {
+  try {
+    return await db.boards
+      .find({ members: { $in: [id] }, _destroy: false })
+      .toArray();
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
 const boardService = {
   createBoard,
   updateListsOrder,
   updateBoardTitle,
   deleteBoard,
+  getYourBoards,
+  getInvitedBoards,
 };
 
 export default boardService;

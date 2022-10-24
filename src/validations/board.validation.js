@@ -2,19 +2,17 @@ import Joi from 'joi';
 import httpStatusCode from '../utils/constants.util.js';
 
 const createBoard = async (req, res, next) => {
-  const { title } = req.body;
-  const data = {
-    title,
-    owner: req.userId.toString(),
-  };
+  req.body.owner = req.userId.toString();
   const condition = Joi.object({
     title: Joi.string().min(3).max(32).required(),
     owner: Joi.string().required(),
   });
 
   try {
-    await condition.validateAsync(data, { abortEarly: false });
-    req.data = data;
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
     next();
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST).json({

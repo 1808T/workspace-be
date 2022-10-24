@@ -9,7 +9,10 @@ const createCard = async (req, res, next) => {
   });
 
   try {
-    await condition.validateAsync(req.body, { abortEarly: false });
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
     next();
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST).json({
@@ -18,9 +21,12 @@ const createCard = async (req, res, next) => {
   }
 };
 
-const updateCardTitle = async (req, res, next) => {
+const updateCard = async (req, res, next) => {
   const condition = Joi.object({
-    title: Joi.string().min(3).max(32),
+    title: Joi.string().min(3).max(32).trim(),
+    description: Joi.string(),
+    isCompleted: Joi.boolean(),
+    dueBy: Joi.date(),
   });
 
   try {
@@ -36,6 +42,23 @@ const updateCardTitle = async (req, res, next) => {
   }
 };
 
-const cardValidation = { createCard, updateCardTitle };
+const searchCards = async (req, res, next) => {
+  const condition = Joi.object({
+    query: Joi.string().trim().required(),
+  });
+
+  try {
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+    });
+    next();
+  } catch (error) {
+    res.status(httpStatusCode.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+};
+
+const cardValidation = { createCard, updateCard, searchCards };
 
 export default cardValidation;

@@ -8,7 +8,10 @@ const createList = async (req, res, next) => {
   });
 
   try {
-    await condition.validateAsync(req.body, { abortEarly: false });
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
     next();
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST).json({

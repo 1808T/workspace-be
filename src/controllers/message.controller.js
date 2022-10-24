@@ -3,11 +3,16 @@ import messageService from '../services/message.service.js';
 
 const createMessage = async (req, res) => {
   try {
-    const { data } = req;
-    const newMessage = await messageService.createMessage(data);
+    const { newMessage, updatedChat } = await messageService.createMessage(
+      req.body,
+    );
     res
       .status(httpStatusCode.CREATED)
-      .json({ message: 'Successfully created new message.', newMessage });
+      .json({
+        message: 'Successfully created new message.',
+        newMessage,
+        updatedChat,
+      });
   } catch (error) {
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)

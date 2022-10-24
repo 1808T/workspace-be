@@ -10,6 +10,7 @@ import userRouter from './routes/user.route.js';
 import boardRouter from './routes/board.route.js';
 import listRouter from './routes/list.route.js';
 import cardRouter from './routes/card.route.js';
+import chatRouter from './routes/chat.route.js';
 import messageRouter from './routes/message.route.js';
 
 const app = express();
@@ -19,10 +20,11 @@ app.use(cors());
 app.use(morgan('dev'));
 
 app.use('/api', userRouter);
-app.use('/api', boardRouter);
-app.use('/api', listRouter);
-app.use('/api', cardRouter);
-app.use('/api', messageRouter);
+app.use('/api/board', boardRouter);
+app.use('/api/list', listRouter);
+app.use('/api/card', cardRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/message', messageRouter);
 
 app.get('/', async (req, res) => {
   res.json({ message: 'Server is running.' });

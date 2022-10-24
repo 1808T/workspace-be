@@ -67,6 +67,24 @@ const signIn = async (data) => {
   }
 };
 
-const userService = { signUp, signIn };
+const updateBoardList = async (userId, boardId) => {
+  try {
+    const result = await db.users.findOneAndUpdate(
+      { _id: userId },
+      { $push: { boardList: boardId } },
+      { returnDocument: 'after' },
+    );
+    if (result.value) {
+      return result.value;
+    } else {
+      throw new Error('No document found.');
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const userService = { signUp, signIn, updateBoardList };
 
 export default userService;

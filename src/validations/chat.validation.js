@@ -1,12 +1,13 @@
 import Joi from 'joi';
 import httpStatusCode from '../utils/constants.util.js';
 
-const createMessage = async (req, res, next) => {
-  req.body.sender = req.userId.toString();
+const createChat = async (req, res, next) => {
+  const { members } = req.body;
+  members.unshift(req.userId.toString());
+
   const condition = Joi.object({
-    sender: Joi.string().required(),
-    chatId: Joi.string().required(),
-    content: Joi.string().required(),
+    title: Joi.string().required().trim(),
+    members: Joi.array().items(Joi.string().required()).required(),
   });
 
   try {
@@ -16,12 +17,13 @@ const createMessage = async (req, res, next) => {
     });
     next();
   } catch (error) {
+    console.log(error.message);
     res.status(httpStatusCode.BAD_REQUEST).json({
       message: error.message,
     });
   }
 };
 
-const messageValidation = { createMessage };
+const chatValidation = { createChat };
 
-export default messageValidation;
+export default chatValidation;
