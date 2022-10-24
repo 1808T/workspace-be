@@ -8,7 +8,7 @@ const cardModel = Joi.object({
   description: Joi.string().default(null),
   isCompleted: Joi.boolean().default(false),
   createdAt: Joi.date().timestamp().default(Date.now()),
-  dueBy: Joi.date().timestamp().default(null),
+  endedAt: Joi.date().timestamp().default(null),
   updatedAt: Joi.date().timestamp().default(null),
   _destroy: Joi.boolean().default(false),
 });

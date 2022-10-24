@@ -6,7 +6,7 @@ import messageController from '../controllers/message.controller.js';
 const messageRouter = express.Router();
 
 messageRouter.post(
-  '/message',
+  '/',
   authMiddleware.verifyToken,
   messageValidation.createMessage,
   messageController.createMessage,

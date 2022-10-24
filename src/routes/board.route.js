@@ -6,23 +6,35 @@ import boardController from '../controllers/board.controller.js';
 const boardRouter = express.Router();
 
 boardRouter.post(
-  '/board',
+  '/',
   authMiddleware.verifyToken,
   boardValidation.createBoard,
   boardController.createBoard,
 );
 
 boardRouter.put(
-  '/board/:id',
+  '/title/:boardId',
   authMiddleware.verifyToken,
   boardValidation.updateBoardTitle,
   boardController.updateBoardTitle,
 );
 
 boardRouter.delete(
-  '/board/:id',
+  '/:id',
   authMiddleware.verifyToken,
   boardController.deleteBoard,
+);
+
+boardRouter.get(
+  '/your-boards',
+  authMiddleware.verifyToken,
+  boardController.getYourBoards,
+);
+
+boardRouter.get(
+  '/invited-boards',
+  authMiddleware.verifyToken,
+  boardController.getInvitedBoards,
 );
 
 export default boardRouter;

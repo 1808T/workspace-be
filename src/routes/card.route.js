@@ -6,23 +6,48 @@ import authMiddleware from '../middleware/auth.middleware.js';
 const cardRouter = express.Router();
 
 cardRouter.post(
-  '/card',
+  '/',
   authMiddleware.verifyToken,
   cardValidation.createCard,
   cardController.createCard,
 );
 
 cardRouter.put(
-  '/card/:id',
+  '/:id',
   authMiddleware.verifyToken,
-  cardValidation.updateCardTitle,
-  cardController.updateCardTitle,
+  cardValidation.updateCard,
+  cardController.updateCard,
 );
 
 cardRouter.delete(
-  '/card/:id',
+  '/:id',
   authMiddleware.verifyToken,
   cardController.deleteCard,
+);
+
+cardRouter.get(
+  '/search',
+  authMiddleware.verifyToken,
+  cardValidation.searchCards,
+  cardController.searchCards,
+);
+
+cardRouter.get(
+  '/your-cards',
+  authMiddleware.verifyToken,
+  cardController.getAllCards,
+);
+
+cardRouter.get(
+  '/due',
+  authMiddleware.verifyToken,
+  cardController.getTodayDueCards,
+);
+
+cardRouter.get(
+  '/monthly',
+  authMiddleware.verifyToken,
+  cardController.getMonthlyDoneCards,
 );
 
 export default cardRouter;

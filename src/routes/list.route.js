@@ -6,21 +6,21 @@ import authMiddleware from '../middleware/auth.middleware.js';
 const listRouter = express.Router();
 
 listRouter.post(
-  '/list',
+  '/',
   authMiddleware.verifyToken,
   listValidation.createList,
   listController.createList,
 );
 
 listRouter.put(
-  '/list/:id',
+  '/:id',
   authMiddleware.verifyToken,
   listValidation.updateListTitle,
   listController.updateListTitle,
 );
 
 listRouter.delete(
-  '/list/:id',
+  '/:id',
   authMiddleware.verifyToken,
   listController.deleteList,
 );
