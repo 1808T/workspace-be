@@ -21,7 +21,7 @@ const createBoard = async (req, res, next) => {
   }
 };
 
-const updateBoardTitle = async (req, res, next) => {
+const updateBoard = async (req, res, next) => {
   const condition = Joi.object({
     title: Joi.string().min(3).max(32),
   });
@@ -39,6 +39,6 @@ const updateBoardTitle = async (req, res, next) => {
   }
 };
 
-const boardValidation = { createBoard, updateBoardTitle };
+const boardValidation = { createBoard, updateBoard };
 
 export default boardValidation;

@@ -8,21 +8,15 @@ import { toTimeStamp } from '../utils/convert-date.util.js';
 const createCard = async (data) => {
   try {
     const validatedData = await validateSchema(cardModel, data);
-    if (validatedData.inCharge) {
-      validatedData.inCharge = new ObjectId(validatedData.inCharge);
-    }
     validatedData.boardId = new ObjectId(validatedData.boardId);
     validatedData.listId = new ObjectId(validatedData.listId);
-    if (validatedData.endedAt) {
-      validatedData.endedAt = toTimeStamp(updateData.endedAt);
-    }
     const result = await db.cards.insertOne(validatedData);
     if (result.acknowledged) {
       const newCard = await db.cards.findOne({
         _id: result.insertedId,
       });
       const { listId } = newCard;
-      const updatedList = await listService.updateCardsOrder(
+      const updatedList = await listService.unshiftCardsOrder(
         listId,
         newCard._id,
       );
@@ -38,6 +32,9 @@ const createCard = async (data) => {
 const updateCard = async (id, data) => {
   try {
     const updateData = { ...data, updatedAt: Date.now() };
+    if (updateData.listId) {
+      updateData.listId = new ObjectId(updateData.listId);
+    }
     if (updateData.inCharge) {
       updateData.inCharge = new ObjectId(updateData.inCharge);
     }
@@ -51,7 +48,24 @@ const updateCard = async (id, data) => {
     );
 
     if (result.value) {
-      return result.value;
+      const { _id } = result.value;
+      const cardResult = await db.cards
+        .aggregate([
+          { $match: { _id: new ObjectId(_id) } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'inCharge',
+              foreignField: '_id',
+              pipeline: [{ $project: { avatar: 1, username: 1 } }],
+              as: 'inCharge',
+            },
+          },
+        ])
+        .toArray();
+      const updatedCard = cardResult[0];
+      updatedCard.inCharge = updatedCard.inCharge[0];
+      return updatedCard;
     } else {
       throw new Error('No document found.');
     }
@@ -81,6 +95,64 @@ const deleteCard = async (id) => {
   }
 };
 
+const moveCardsToOtherList = async (data) => {
+  try {
+    const {
+      cardId,
+      listFromId,
+      listFromCardsOrder,
+      listToId,
+      listToCardsOrder,
+    } = data;
+    const updateCardData = {
+      updatedAt: Date.now(),
+      listId: new ObjectId(listToId),
+    };
+    const updatedCard = await db.cards.findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      { $set: updateCardData },
+      { returnDocument: 'after' },
+    );
+    const listFromData = {
+      updatedAt: Date.now(),
+      cardsOrder: listFromCardsOrder,
+    };
+    listFromData.cardsOrder.forEach(
+      (cardId, index) =>
+        (listFromData.cardsOrder[index] = new ObjectId(cardId)),
+    );
+    const listFrom = await db.lists.findOneAndUpdate(
+      { _id: new ObjectId(listFromId) },
+      { $set: listFromData },
+      { returnDocument: 'after' },
+    );
+    const listToData = {
+      updatedAt: Date.now(),
+      cardsOrder: listToCardsOrder,
+    };
+    listToData.cardsOrder.forEach(
+      (cardId, index) => (listToData.cardsOrder[index] = new ObjectId(cardId)),
+    );
+    const listTo = await db.lists.findOneAndUpdate(
+      { _id: new ObjectId(listToId) },
+      { $set: listToData },
+      { returnDocument: 'after' },
+    );
+    if (updatedCard.value && listFrom.value && listTo.value) {
+      return {
+        updatedCard: updatedCard.value,
+        listFrom: listFrom.value,
+        listTo: listTo.value,
+      };
+    } else {
+      throw new Error('Something went wrong. Please try again!');
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
 const searchCards = async (data, userId) => {
   const trimData = data.trim();
   const query = new RegExp(trimData, 'i');
@@ -96,7 +168,14 @@ const searchCards = async (data, userId) => {
             as: 'board',
           },
         },
-        { $match: { 'board.members': { $in: [userId] } } },
+        {
+          $match: {
+            $or: [
+              { 'board.owner': userId },
+              { 'board.member': { $in: [userId] } },
+            ],
+          },
+        },
         { $project: { board: 0 } },
       ])
       .toArray();
@@ -107,43 +186,10 @@ const searchCards = async (data, userId) => {
   }
 };
 
-const getAllCards = async (userId) => {
-  try {
-    return await db.cards
-      .find({
-        inCharge: userId,
-        _destroy: false,
-      })
-      .toArray();
-  } catch (error) {
-    console.log(error);
-    throw new Error(error);
-  }
-};
-
-const getTodayDueCards = async (userId) => {
-  try {
-    const date = new Date();
-    const today = toTimeStamp(
-      `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
-    );
-    return await db.cards
-      .find({
-        inCharge: userId,
-        endedAt: today,
-        _destroy: false,
-      })
-      .toArray();
-  } catch (error) {
-    console.log(error);
-    throw new Error(error);
-  }
-};
-
 const getMonthlyDoneCards = async (userId) => {
   const currentYear = new Date().getFullYear();
   try {
-    const allCardsCurrentYear = await db.cards
+    const allDoneCardsCurrentYear = await db.cards
       .aggregate([
         { $match: { inCharge: userId, _destroy: false, isCompleted: true } },
         { $addFields: { endYear: { $year: { $toDate: '$endedAt' } } } },
@@ -152,24 +198,112 @@ const getMonthlyDoneCards = async (userId) => {
         { $sort: { endedAt: 1 } },
       ])
       .toArray();
-    const monthlyDoneCards = {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
-      6: 0,
-      7: 0,
-      8: 0,
-      9: 0,
-      10: 0,
-      11: 0,
-      12: 0,
+    const allCardsCurrentYear = await db.cards
+      .aggregate([
+        { $match: { inCharge: userId, _destroy: false } },
+        { $addFields: { endYear: { $year: { $toDate: '$endedAt' } } } },
+        { $addFields: { endMonth: { $month: { $toDate: '$endedAt' } } } },
+        { $match: { endYear: currentYear } },
+        { $sort: { endedAt: 1 } },
+      ])
+      .toArray();
+    const monthlyCards = {
+      1: { allTasks: 0, doneTasks: 0 },
+      2: { allTasks: 0, doneTasks: 0 },
+      3: { allTasks: 0, doneTasks: 0 },
+      4: { allTasks: 0, doneTasks: 0 },
+      5: { allTasks: 0, doneTasks: 0 },
+      6: { allTasks: 0, doneTasks: 0 },
+      7: { allTasks: 0, doneTasks: 0 },
+      8: { allTasks: 0, doneTasks: 0 },
+      9: { allTasks: 0, doneTasks: 0 },
+      10: { allTasks: 0, doneTasks: 0 },
+      11: { allTasks: 0, doneTasks: 0 },
+      12: { allTasks: 0, doneTasks: 0 },
     };
-    allCardsCurrentYear.forEach((card) => {
-      monthlyDoneCards[card.endMonth] = monthlyDoneCards[card.endMonth] + 1;
+    allDoneCardsCurrentYear.forEach((card) => {
+      monthlyCards[card.endMonth]['doneTasks'] =
+        monthlyCards[card.endMonth]['doneTasks'] + 1;
     });
-    return { allCardsCurrentYear, monthlyDoneCards };
+    allCardsCurrentYear.forEach((card) => {
+      monthlyCards[card.endMonth]['allTasks'] =
+        monthlyCards[card.endMonth]['allTasks'] + 1;
+    });
+    return monthlyCards;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const getWeeklyDoneCards = async (userId) => {
+  try {
+    const currentWeek = new Date().getWeek();
+    let lastWeek = 0;
+    if (currentWeek === 1) {
+      lastWeek = 1;
+    } else {
+      lastWeek = currentWeek - 1;
+    }
+    const currentWeekDoneCards = await db.cards
+      .aggregate([
+        { $match: { inCharge: userId, _destroy: false, isCompleted: true } },
+        { $addFields: { endWeek: { $week: { $toDate: '$endedAt' } } } },
+        { $match: { endWeek: currentWeek } },
+        { $sort: { endedAt: 1 } },
+      ])
+      .toArray();
+    const lastWeekDoneCards = await db.cards
+      .aggregate([
+        { $match: { inCharge: userId, _destroy: false, isCompleted: true } },
+        { $addFields: { endWeek: { $week: { $toDate: '$endedAt' } } } },
+        { $match: { endWeek: lastWeek } },
+        { $sort: { endedAt: 1 } },
+      ])
+      .toArray();
+    const numberOfCurrentWeekDoneCards = currentWeekDoneCards.length;
+    const numberOfLastWeekDoneCards = lastWeekDoneCards.length;
+    return {
+      currentWeekDoneCards: numberOfCurrentWeekDoneCards,
+      lastWeekDoneCards: numberOfLastWeekDoneCards,
+    };
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const getWeeklyNewCards = async (userId) => {
+  try {
+    const currentWeek = new Date().getWeek();
+    let lastWeek = 0;
+    if (currentWeek === 1) {
+      lastWeek = 1;
+    } else {
+      lastWeek = currentWeek - 1;
+    }
+    const currentWeekNewCards = await db.cards
+      .aggregate([
+        { $match: { inCharge: userId, _destroy: false } },
+        { $addFields: { createdWeek: { $week: { $toDate: '$createdAt' } } } },
+        { $match: { createdWeek: currentWeek } },
+        { $sort: { createdAt: 1 } },
+      ])
+      .toArray();
+    const lastWeekNewCards = await db.cards
+      .aggregate([
+        { $match: { inCharge: userId, _destroy: false } },
+        { $addFields: { createdWeek: { $week: { $toDate: '$createdAt' } } } },
+        { $match: { createdWeek: lastWeek } },
+        { $sort: { createdAt: 1 } },
+      ])
+      .toArray();
+    const numberOfCurrentWeekNewCards = currentWeekNewCards.length;
+    const numberOfLastWeekNewCards = lastWeekNewCards.length;
+    return {
+      currentWeekNewCards: numberOfCurrentWeekNewCards,
+      lastWeekNewCards: numberOfLastWeekNewCards,
+    };
   } catch (error) {
     console.log(error);
     throw new Error(error);
@@ -180,10 +314,11 @@ const cardService = {
   createCard,
   updateCard,
   deleteCard,
+  moveCardsToOtherList,
   searchCards,
-  getAllCards,
-  getTodayDueCards,
   getMonthlyDoneCards,
+  getWeeklyDoneCards,
+  getWeeklyNewCards,
 };
 
 export default cardService;

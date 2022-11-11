@@ -1,5 +1,6 @@
 import httpStatusCode from '../utils/constants.util.js';
 import cardService from '../services/card.service.js';
+import { db } from '../configs/db.config.js';
 
 const createCard = async (req, res) => {
   try {
@@ -22,11 +23,11 @@ const createCard = async (req, res) => {
 const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedList = await cardService.updateCard(id, req.body);
+    const updatedCard = await cardService.updateCard(id, req.body);
 
     res.status(httpStatusCode.OK).json({
       message: 'Successfully updated card.',
-      updatedList,
+      updatedCard,
     });
   } catch (error) {
     console.log(error);
@@ -45,6 +46,25 @@ const deleteCard = async (req, res) => {
     res.status(httpStatusCode.OK).json({
       message: 'Successfully deleted card.',
       deletedCard,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const moveCardsToOtherList = async (req, res) => {
+  try {
+    const { updatedCard, listFrom, listTo } =
+      await cardService.moveCardsToOtherList(req.body);
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully move card.',
+      updatedCard,
+      listFrom,
+      listTo,
     });
   } catch (error) {
     console.log(error);
@@ -76,59 +96,66 @@ const searchCards = async (req, res) => {
   }
 };
 
-const getAllCards = async (req, res) => {
-  try {
-    const allCards = await cardService.getAllCards(req.userId);
-
-    if (allCards.length === 0) {
-      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
-    } else {
-      res
-        .status(httpStatusCode.OK)
-        .json({ message: 'Successfully get all cards.', allCards });
-    }
-  } catch (error) {
-    console.log(error);
-
-    res
-      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: error.message });
-  }
-};
-
-const getTodayDueCards = async (req, res) => {
-  try {
-    const todayCards = await cardService.getTodayDueCards(req.userId);
-
-    if (todayCards.length === 0) {
-      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
-    } else {
-      res
-        .status(httpStatusCode.OK)
-        .json({ message: 'Successfully get all today cards.', todayCards });
-    }
-  } catch (error) {
-    console.log(error);
-
-    res
-      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: error.message });
-  }
-};
-
 const getMonthlyDoneCards = async (req, res) => {
   try {
-    const { allCardsCurrentYear, monthlyDoneCards } =
-      await cardService.getMonthlyDoneCards(req.userId);
+    const monthlyCards = await cardService.getMonthlyDoneCards(req.userId);
 
-    if (allCardsCurrentYear.length === 0) {
-      res.status(httpStatusCode.OK).json({ message: 'No cards found.' });
-    } else {
-      res.status(httpStatusCode.OK).json({
-        message: 'Successfully get all this month cards.',
-        monthlyDoneCards,
-      });
-    }
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get all monthly cards.',
+      monthlyCards,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const uploadImage = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.file);
+  try {
+    const updatedCard = await cardService.updateCard(id, {
+      cover: req.file.path,
+    });
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully upload image.',
+      updatedCard,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getWeeklyDoneCards = async (req, res) => {
+  try {
+    const weeklyDoneCards = await cardService.getWeeklyDoneCards(req.userId);
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get last week done cards.',
+      weeklyDoneCards,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getWeeklyNewCards = async (req, res) => {
+  try {
+    const weeklyNewCards = await cardService.getWeeklyNewCards(req.userId);
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get last week done cards.',
+      weeklyNewCards,
+    });
   } catch (error) {
     console.log(error);
 
@@ -142,10 +169,12 @@ const cardController = {
   createCard,
   updateCard,
   deleteCard,
+  moveCardsToOtherList,
   searchCards,
-  getAllCards,
-  getTodayDueCards,
   getMonthlyDoneCards,
+  uploadImage,
+  getWeeklyDoneCards,
+  getWeeklyNewCards,
 };
 
 export default cardController;

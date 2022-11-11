@@ -67,6 +67,58 @@ const signIn = async (data) => {
   }
 };
 
+const adminSignUp = async (data) => {
+  try {
+    const validatedData = await validateSchema(userModel, data);
+    const { password } = validatedData;
+    const hashedPassword = await hashPassword(password);
+
+    delete validatedData.repeatPassword;
+    validatedData.password = hashedPassword;
+    validatedData.isAdmin = true;
+
+    const result = await db.users.insertOne(validatedData);
+    if (result.acknowledged) {
+      const newAdmin = await db.users.findOne({
+        _id: result.insertedId,
+      });
+      return newAdmin;
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const adminSignIn = async (data) => {
+  try {
+    const { email, password } = data;
+    const result = {};
+    result.user = await db.users.findOne(
+      { email },
+      {
+        projection: {
+          boardList: 0,
+          friends: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      },
+    );
+    if (result.user) {
+      result.matchPassword = await comparePassword(
+        password,
+        result.user.password,
+      );
+      result.token = authMiddleware.generateToken(result.user._id);
+    }
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
 const updateBoardList = async (userId, boardId) => {
   try {
     const result = await db.users.findOneAndUpdate(
@@ -85,6 +137,25 @@ const updateBoardList = async (userId, boardId) => {
   }
 };
 
-const userService = { signUp, signIn, updateBoardList };
+const getUserInfo = async (userId) => {
+  try {
+    return await db.users.findOne(
+      { _id: userId },
+      { projection: { password: 0 } },
+    );
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const userService = {
+  signUp,
+  signIn,
+  adminSignUp,
+  adminSignIn,
+  updateBoardList,
+  getUserInfo,
+};
 
 export default userService;

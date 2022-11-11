@@ -12,19 +12,6 @@ boardRouter.post(
   boardController.createBoard,
 );
 
-boardRouter.put(
-  '/title/:boardId',
-  authMiddleware.verifyToken,
-  boardValidation.updateBoardTitle,
-  boardController.updateBoardTitle,
-);
-
-boardRouter.delete(
-  '/:id',
-  authMiddleware.verifyToken,
-  boardController.deleteBoard,
-);
-
 boardRouter.get(
   '/your-boards',
   authMiddleware.verifyToken,
@@ -35,6 +22,31 @@ boardRouter.get(
   '/invited-boards',
   authMiddleware.verifyToken,
   boardController.getInvitedBoards,
+);
+
+boardRouter.get(
+  '/progress',
+  authMiddleware.verifyToken,
+  boardController.getBoardProgress,
+);
+
+boardRouter.get(
+  '/:id',
+  authMiddleware.verifyToken,
+  boardController.getBoardDetail,
+);
+
+boardRouter.put(
+  '/:id',
+  authMiddleware.verifyToken,
+  boardValidation.updateBoard,
+  boardController.updateBoard,
+);
+
+boardRouter.delete(
+  '/:id',
+  authMiddleware.verifyToken,
+  boardController.deleteBoard,
 );
 
 export default boardRouter;

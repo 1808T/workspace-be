@@ -24,7 +24,6 @@ const createCard = async (req, res, next) => {
 const updateCard = async (req, res, next) => {
   const condition = Joi.object({
     title: Joi.string().min(3).max(32).trim(),
-    description: Joi.string(),
     isCompleted: Joi.boolean(),
     dueBy: Joi.date(),
   });

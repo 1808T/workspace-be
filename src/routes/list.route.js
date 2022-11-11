@@ -15,8 +15,8 @@ listRouter.post(
 listRouter.put(
   '/:id',
   authMiddleware.verifyToken,
-  listValidation.updateListTitle,
-  listController.updateListTitle,
+  listValidation.updateList,
+  listController.updateList,
 );
 
 listRouter.delete(

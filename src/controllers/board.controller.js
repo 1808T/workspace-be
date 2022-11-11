@@ -4,13 +4,11 @@ import boardService from '../services/board.service.js';
 const createBoard = async (req, res) => {
   try {
     const { newBoard, updatedUser } = await boardService.createBoard(req.body);
-    res
-      .status(httpStatusCode.CREATED)
-      .json({
-        message: 'Successfully created new board.',
-        newBoard,
-        updatedUser,
-      });
+    res.status(httpStatusCode.CREATED).json({
+      message: 'Successfully created new board.',
+      newBoard,
+      updatedUser,
+    });
   } catch (error) {
     console.log(error);
     res
@@ -19,10 +17,10 @@ const createBoard = async (req, res) => {
   }
 };
 
-const updateBoardTitle = async (req, res) => {
+const updateBoard = async (req, res) => {
   try {
-    const { boardId } = req.params;
-    const updatedBoard = await boardService.updateBoardTitle(boardId, req.body);
+    const { id } = req.params;
+    const updatedBoard = await boardService.updateBoard(id, req.body);
     res
       .status(httpStatusCode.OK)
       .json({ message: 'Successfully updated board.', updatedBoard });
@@ -40,6 +38,21 @@ const deleteBoard = async (req, res) => {
     res
       .status(httpStatusCode.OK)
       .json({ message: 'Successfully deleted board.', deletedBoard });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getBoardDetail = async (req, res) => {
+  const boardId = req.params;
+  try {
+    const board = await boardService.getBoardDetail(boardId);
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get board.',
+      board,
+    });
   } catch (error) {
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
@@ -84,12 +97,32 @@ const getInvitedBoards = async (req, res) => {
   }
 };
 
+const getBoardProgress = async (req, res) => {
+  try {
+    const boards = await boardService.getBoardProgress(req.userId);
+    if (boards.length === 0) {
+      res.status(httpStatusCode.OK).json({ message: 'No board found.' });
+    } else {
+      res.status(httpStatusCode.OK).json({
+        message: 'Successfully get boards progress.',
+        boards,
+      });
+    }
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const boardController = {
   createBoard,
-  updateBoardTitle,
+  getBoardDetail,
+  updateBoard,
   deleteBoard,
   getYourBoards,
   getInvitedBoards,
+  getBoardProgress,
 };
 
 export default boardController;
