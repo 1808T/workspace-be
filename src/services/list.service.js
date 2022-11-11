@@ -13,9 +13,10 @@ const createList = async (data) => {
       const newList = await db.lists.findOne({
         _id: addNewListResult.insertedId,
       });
+      newList.cards = [];
       const { boardId } = newList;
       const listId = newList._id;
-      const updatedBoard = await boardService.updateListsOrder(boardId, listId);
+      const updatedBoard = await boardService.pushListsOrder(boardId, listId);
 
       return { newList, updatedBoard };
     }
@@ -25,11 +26,14 @@ const createList = async (data) => {
   }
 };
 
-const updateCardsOrder = async (listId, cardId) => {
+const unshiftCardsOrder = async (listId, cardId) => {
   try {
     const result = await db.lists.findOneAndUpdate(
       { _id: listId },
-      { $push: { cardsOrder: cardId }, $set: { updatedAt: Date.now() } },
+      {
+        $push: { cardsOrder: { $each: [cardId], $position: 0 } },
+        $set: { updatedAt: Date.now() },
+      },
       { returnDocument: 'after' },
     );
     if (result.value) {
@@ -43,7 +47,7 @@ const updateCardsOrder = async (listId, cardId) => {
   }
 };
 
-const updateListTitle = async (id, data) => {
+const updateList = async (id, data) => {
   try {
     const updateData = { ...data, updatedAt: Date.now() };
     const result = await db.lists.findOneAndUpdate(
@@ -66,14 +70,22 @@ const updateListTitle = async (id, data) => {
 const deleteList = async (id) => {
   try {
     const data = { updatedAt: Date.now(), _destroy: true };
-    const result = await db.lists.findOneAndUpdate(
+    const deleteListResult = await db.lists.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: data },
       { returnDocument: 'after' },
     );
 
-    if (result.value) {
-      return result.value;
+    if (deleteListResult.value) {
+      const deletedList = deleteListResult.value;
+      console.log(deletedList);
+      const { boardId } = deletedList;
+      const listId = deletedList._id;
+      const updatedBoard = await boardService.deleteListFromListOrder(
+        boardId,
+        listId,
+      );
+      return { deletedList, updatedBoard };
     } else {
       throw new Error('No document found.');
     }
@@ -85,8 +97,8 @@ const deleteList = async (id) => {
 
 const listService = {
   createList,
-  updateCardsOrder,
-  updateListTitle,
+  unshiftCardsOrder,
+  updateList,
   deleteList,
 };
 

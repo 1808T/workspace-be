@@ -17,10 +17,10 @@ const createList = async (req, res) => {
   }
 };
 
-const updateListTitle = async (req, res) => {
+const updateList = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedList = await listService.updateListTitle(id, req.body);
+    const updatedList = await listService.updateList(id, req.body);
     res.status(httpStatusCode.OK).json({
       message: 'Successfully updated list.',
       updatedList,
@@ -36,10 +36,11 @@ const updateListTitle = async (req, res) => {
 const deleteList = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedList = await listService.deleteList(id);
+    const { deletedList, updatedBoard } = await listService.deleteList(id);
     res.status(httpStatusCode.OK).json({
       message: 'Successfully deleted list.',
       deletedList,
+      updatedBoard,
     });
   } catch (error) {
     console.log(error);
@@ -49,6 +50,6 @@ const deleteList = async (req, res) => {
   }
 };
 
-const listController = { createList, updateListTitle, deleteList };
+const listController = { createList, updateList, deleteList };
 
 export default listController;

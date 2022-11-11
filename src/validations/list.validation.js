@@ -20,7 +20,7 @@ const createList = async (req, res, next) => {
   }
 };
 
-const updateListTitle = async (req, res, next) => {
+const updateList = async (req, res, next) => {
   const condition = Joi.object({
     title: Joi.string().min(3).max(32),
   });
@@ -38,6 +38,6 @@ const updateListTitle = async (req, res, next) => {
   }
 };
 
-const listValidation = { createList, updateListTitle };
+const listValidation = { createList, updateList };
 
 export default listValidation;
