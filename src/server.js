@@ -12,6 +12,7 @@ import listRouter from './routes/list.route.js';
 import cardRouter from './routes/card.route.js';
 import chatRouter from './routes/chat.route.js';
 import messageRouter from './routes/message.route.js';
+import adminRouter from './routes/admin.route.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/list', listRouter);
 app.use('/api/card', cardRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/message', messageRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/', async (req, res) => {
   res.json({ message: 'Server is running.' });

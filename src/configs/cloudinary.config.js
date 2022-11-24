@@ -14,7 +14,14 @@ cloudinary.config({
 const avatarStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'USER_AVATAR',
+    folder: 'AVATAR',
+  },
+});
+
+const coverPhotoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'USER_COVER',
   },
 });
 
@@ -25,4 +32,4 @@ const cardCoverStorage = new CloudinaryStorage({
   },
 });
 
-export { avatarStorage, cardCoverStorage };
+export { avatarStorage, cardCoverStorage, coverPhotoStorage };

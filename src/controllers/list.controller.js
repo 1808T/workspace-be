@@ -10,7 +10,6 @@ const createList = async (req, res) => {
       updatedBoard,
     });
   } catch (error) {
-    console.log(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -26,7 +25,6 @@ const updateList = async (req, res) => {
       updatedList,
     });
   } catch (error) {
-    console.log(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -43,7 +41,6 @@ const deleteList = async (req, res) => {
       updatedBoard,
     });
   } catch (error) {
-    console.log(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });

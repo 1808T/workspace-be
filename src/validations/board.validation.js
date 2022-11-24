@@ -6,6 +6,7 @@ const createBoard = async (req, res, next) => {
   const condition = Joi.object({
     title: Joi.string().min(3).max(32).required(),
     owner: Joi.string().required(),
+    background: Joi.string(),
   });
 
   try {

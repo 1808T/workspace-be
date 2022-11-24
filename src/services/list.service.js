@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { db } from '../configs/db.config.js';
 import boardService from './board.service.js';
 import validateSchema from '../utils/validate-schema.util.js';
+import cardService from './card.service.js';
 
 const createList = async (data) => {
   try {
@@ -21,7 +22,6 @@ const createList = async (data) => {
       return { newList, updatedBoard };
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -42,7 +42,6 @@ const unshiftCardsOrder = async (listId, cardId) => {
       throw new Error('No document found.');
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -62,7 +61,6 @@ const updateList = async (id, data) => {
       throw new Error('No document match.');
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -78,9 +76,9 @@ const deleteList = async (id) => {
 
     if (deleteListResult.value) {
       const deletedList = deleteListResult.value;
-      console.log(deletedList);
       const { boardId } = deletedList;
       const listId = deletedList._id;
+      await cardService.deleteCardByListId(listId);
       const updatedBoard = await boardService.deleteListFromListOrder(
         boardId,
         listId,
@@ -90,7 +88,18 @@ const deleteList = async (id) => {
       throw new Error('No document found.');
     }
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const deleteListsByBoardId = async (boardId) => {
+  try {
+    const data = { updatedAt: Date.now(), _destroy: true };
+    await db.lists.updateMany(
+      { boardId: new ObjectId(boardId), _destroy: false },
+      { $set: data },
+    );
+  } catch (error) {
     throw new Error(error);
   }
 };
@@ -100,6 +109,7 @@ const listService = {
   unshiftCardsOrder,
   updateList,
   deleteList,
+  deleteListsByBoardId,
 };
 
 export default listService;

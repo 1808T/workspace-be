@@ -31,6 +31,36 @@ boardRouter.get(
 );
 
 boardRouter.get(
+  '/completed',
+  authMiddleware.verifyToken,
+  boardController.getCompletedBoards,
+);
+
+boardRouter.put(
+  '/leave',
+  authMiddleware.verifyToken,
+  boardController.leaveBoard,
+);
+
+boardRouter.post(
+  '/search',
+  authMiddleware.verifyToken,
+  boardController.searchBoard,
+);
+
+boardRouter.post(
+  '/add-member',
+  authMiddleware.verifyToken,
+  boardController.addMember,
+);
+
+boardRouter.post(
+  '/remove-member',
+  authMiddleware.verifyToken,
+  boardController.removeMember,
+);
+
+boardRouter.get(
   '/:id',
   authMiddleware.verifyToken,
   boardController.getBoardDetail,
@@ -46,6 +76,7 @@ boardRouter.put(
 boardRouter.delete(
   '/:id',
   authMiddleware.verifyToken,
+  authMiddleware.verifyOwner,
   boardController.deleteBoard,
 );
 

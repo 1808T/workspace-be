@@ -5,11 +5,10 @@ const boardModel = Joi.object({
   owner: Joi.string().required(),
   listsOrder: Joi.array().items(Joi.string()).default([]),
   members: Joi.array().items(Joi.string()).default([]),
+  background: Joi.string().default(null),
   isCompleted: Joi.boolean().default(false),
   createdAt: Joi.date().timestamp().default(Date.now()),
   updatedAt: Joi.date().timestamp().default(null),
-  status: Joi.string().default('public'),
-  background: Joi.string().default(null),
   _destroy: Joi.boolean().default(false),
 });
 

@@ -24,7 +24,7 @@ cardRouter.put(
   cardController.moveCardsToOtherList,
 );
 
-cardRouter.get(
+cardRouter.post(
   '/search',
   authMiddleware.verifyToken,
   cardValidation.searchCards,

@@ -17,7 +17,6 @@ const createChat = async (req, res, next) => {
     });
     next();
   } catch (error) {
-    console.log(error.message);
     res.status(httpStatusCode.BAD_REQUEST).json({
       message: error.message,
     });

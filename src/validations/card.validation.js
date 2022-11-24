@@ -43,7 +43,7 @@ const updateCard = async (req, res, next) => {
 
 const searchCards = async (req, res, next) => {
   const condition = Joi.object({
-    query: Joi.string().trim().required(),
+    query: Joi.string().trim(),
   });
 
   try {
