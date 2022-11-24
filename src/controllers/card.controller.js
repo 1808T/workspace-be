@@ -12,8 +12,6 @@ const createCard = async (req, res) => {
       updatedList,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -30,8 +28,6 @@ const updateCard = async (req, res) => {
       updatedCard,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -48,8 +44,6 @@ const deleteCard = async (req, res) => {
       deletedCard,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -67,8 +61,6 @@ const moveCardsToOtherList = async (req, res) => {
       listTo,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -88,8 +80,6 @@ const searchCards = async (req, res) => {
         .json({ message: 'Successfully search cards.', searchedCards });
     }
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -105,8 +95,6 @@ const getMonthlyDoneCards = async (req, res) => {
       monthlyCards,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -115,7 +103,6 @@ const getMonthlyDoneCards = async (req, res) => {
 
 const uploadImage = async (req, res) => {
   const { id } = req.params;
-  console.log(req.file);
   try {
     const updatedCard = await cardService.updateCard(id, {
       cover: req.file.path,
@@ -125,8 +112,6 @@ const uploadImage = async (req, res) => {
       updatedCard,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -141,8 +126,6 @@ const getWeeklyDoneCards = async (req, res) => {
       weeklyDoneCards,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });
@@ -157,8 +140,6 @@ const getWeeklyNewCards = async (req, res) => {
       weeklyNewCards,
     });
   } catch (error) {
-    console.log(error);
-
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });

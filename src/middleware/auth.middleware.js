@@ -42,6 +42,53 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-const authMiddleware = { generateToken, verifyToken };
+const verifyOwner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    const deletedBoard = await db.boards.findOne({ _id: new ObjectId(id) });
+    if (userId.toString() === deletedBoard.owner.toString()) {
+      next();
+    } else {
+      res
+        .status(httpStatusCode.UNAUTHORIZED)
+        .json({ message: 'Unauthorized.' });
+    }
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const verifyMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    const { members, owner } = await db.boards.findOne({
+      _id: new ObjectId(id),
+    });
+    if (
+      !members.includes(userId.toString()) &&
+      owner.toString() !== userId.toString()
+    ) {
+      return res
+        .status(httpStatusCode.UNAUTHORIZED)
+        .json({ message: 'Unauthorized.' });
+    }
+    next();
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const authMiddleware = {
+  generateToken,
+  verifyToken,
+  verifyOwner,
+  verifyMember,
+};
 
 export default authMiddleware;

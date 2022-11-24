@@ -21,7 +21,6 @@ const createMessage = async (data) => {
       return { newMessage, updatedChat };
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };

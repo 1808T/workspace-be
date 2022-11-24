@@ -9,7 +9,6 @@ const createChat = async (req, res) => {
       newChat,
     });
   } catch (error) {
-    console.log(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
       .json({ message: error.message });

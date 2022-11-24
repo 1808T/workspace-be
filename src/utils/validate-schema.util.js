@@ -4,7 +4,6 @@ const validateSchema = async (schema, data) => {
       abortEarly: false,
     });
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };

@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import cardModel from '../models/card.model.js';
 import validateSchema from '../utils/validate-schema.util.js';
 import listService from './list.service.js';
-import { toTimeStamp } from '../utils/convert-date.util.js';
+import { toTimeStamp, getWeek } from '../utils/convert-date.util.js';
 
 const createCard = async (data) => {
   try {
@@ -24,7 +24,6 @@ const createCard = async (data) => {
       return { newCard, updatedList };
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -70,7 +69,6 @@ const updateCard = async (id, data) => {
       throw new Error('No document found.');
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -90,7 +88,30 @@ const deleteCard = async (id) => {
       throw new Error('No document found.');
     }
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const deleteCardByBoardId = async (boardId) => {
+  try {
+    const data = { updatedAt: Date.now(), _destroy: true };
+    await db.cards.updateMany(
+      { boardId: new ObjectId(boardId), _destroy: false },
+      { $set: data },
+    );
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const deleteCardByListId = async (listId) => {
+  try {
+    const data = { updatedAt: Date.now(), _destroy: true };
+    await db.cards.updateMany(
+      { listId: new ObjectId(listId), _destroy: false },
+      { $set: data },
+    );
+  } catch (error) {
     throw new Error(error);
   }
 };
@@ -148,40 +169,6 @@ const moveCardsToOtherList = async (data) => {
       throw new Error('Something went wrong. Please try again!');
     }
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
-  }
-};
-
-const searchCards = async (data, userId) => {
-  const trimData = data.trim();
-  const query = new RegExp(trimData, 'i');
-  try {
-    const result = await db.cards
-      .aggregate([
-        { $match: { title: { $regex: query } } },
-        {
-          $lookup: {
-            from: 'boards',
-            localField: 'boardId',
-            foreignField: '_id',
-            as: 'board',
-          },
-        },
-        {
-          $match: {
-            $or: [
-              { 'board.owner': userId },
-              { 'board.member': { $in: [userId] } },
-            ],
-          },
-        },
-        { $project: { board: 0 } },
-      ])
-      .toArray();
-    return result;
-  } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -231,14 +218,13 @@ const getMonthlyDoneCards = async (userId) => {
     });
     return monthlyCards;
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
 
 const getWeeklyDoneCards = async (userId) => {
   try {
-    const currentWeek = new Date().getWeek();
+    const currentWeek = getWeek(new Date());
     let lastWeek = 0;
     if (currentWeek === 1) {
       lastWeek = 1;
@@ -268,14 +254,13 @@ const getWeeklyDoneCards = async (userId) => {
       lastWeekDoneCards: numberOfLastWeekDoneCards,
     };
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
 
 const getWeeklyNewCards = async (userId) => {
   try {
-    const currentWeek = new Date().getWeek();
+    const currentWeek = getWeek(new Date());
     let lastWeek = 0;
     if (currentWeek === 1) {
       lastWeek = 1;
@@ -305,7 +290,38 @@ const getWeeklyNewCards = async (userId) => {
       lastWeekNewCards: numberOfLastWeekNewCards,
     };
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
+  }
+};
+
+const searchCards = async (data, userId) => {
+  const trimData = data.trim();
+  const query = new RegExp(trimData, 'i');
+  try {
+    const result = await db.cards
+      .aggregate([
+        { $match: { title: { $regex: query }, _destroy: false } },
+        {
+          $lookup: {
+            from: 'boards',
+            localField: 'boardId',
+            foreignField: '_id',
+            as: 'board',
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { 'board.owner': userId },
+              { 'board.members': { $in: [userId] } },
+            ],
+          },
+        },
+        { $project: { board: 0 } },
+      ])
+      .toArray();
+    return result;
+  } catch (error) {
     throw new Error(error);
   }
 };
@@ -314,11 +330,13 @@ const cardService = {
   createCard,
   updateCard,
   deleteCard,
+  deleteCardByBoardId,
+  deleteCardByListId,
   moveCardsToOtherList,
-  searchCards,
   getMonthlyDoneCards,
   getWeeklyDoneCards,
   getWeeklyNewCards,
+  searchCards,
 };
 
 export default cardService;

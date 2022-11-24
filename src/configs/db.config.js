@@ -7,11 +7,6 @@ const connectionParams = {
 };
 const client = new MongoClient(env.MONGODB_URI, connectionParams);
 
-const showDbs = async (client) => {
-  const { databases } = await client.db().admin().listDatabases();
-  console.log(databases);
-};
-
 const dbName = 'workspaceManagement';
 export const db = {};
 
@@ -20,7 +15,6 @@ export const connectToDatabase = async () => {
     console.log('Connecting to database...');
     await client.connect();
     console.log('Successfully connect to database!!!');
-    await showDbs(client);
 
     const database = client.db(dbName);
 

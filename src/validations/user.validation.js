@@ -73,6 +73,47 @@ const signIn = async (req, res, next) => {
   }
 };
 
-const userValidation = { signUp, signIn };
+const updateUser = async (req, res, next) => {
+  const condition = Joi.object({
+    fullName: Joi.string().min(3).max(32).trim(),
+    avatar: Joi.string(),
+    dueBy: Joi.date(),
+    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,32}$')),
+    repeatPassword: Joi.ref('password'),
+  });
+
+  try {
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
+    next();
+  } catch (error) {
+    res.status(httpStatusCode.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  const condition = Joi.object({
+    newPassword: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,32}$')),
+    repeatNewPassword: Joi.ref('newPassword'),
+  });
+
+  try {
+    await condition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
+    next();
+  } catch (error) {
+    res.status(httpStatusCode.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+};
+
+const userValidation = { signUp, signIn, updateUser, changePassword };
 
 export default userValidation;

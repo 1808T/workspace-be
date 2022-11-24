@@ -15,7 +15,6 @@ const createChat = async (data) => {
       return await db.chats.findOne({ _id: result.insertedId });
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -33,7 +32,6 @@ const updateMessages = async (chatId, messageId) => {
       throw new Error('No document found.');
     }
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
@@ -61,10 +59,8 @@ const getAllChats = async (userId) => {
         },
       ])
       .toArray();
-    console.log(result);
     return result;
   } catch (error) {
-    console.log(error);
     throw new Error(error);
   }
 };
