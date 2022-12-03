@@ -10,6 +10,8 @@
 |  dotenv          |
 |  jsonwebtoken    |
 |  bcrypt          |
+|  cloudinary      |
+|  multer          |
 
 &nbsp;
 ## How to run?
