@@ -46,9 +46,69 @@ const signIn = async (req, res) => {
   }
 };
 
+const getWorkspaces = async (req, res) => {
+  try {
+    const workspaces = await adminService.getWorkspaces();
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully get workspaces.', workspaces });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await adminService.getUsers();
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully get users.', users });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const deleteBoard = async (req, res) => {
+  try {
+    const boardId = req.params.id;
+    const deletedBoard = await adminService.deleteBoard(boardId);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully deleted board.', deletedBoard });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const updatedUser = await adminService.updateUser(userId, req.body);
+
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully updated user info.',
+      updatedUser,
+    });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const adminController = {
   signIn,
   signUp,
+  getWorkspaces,
+  getUsers,
+  deleteBoard,
+  updateUser,
 };
 
 export default adminController;

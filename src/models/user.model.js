@@ -14,7 +14,7 @@ const userModel = Joi.object({
   fullName: Joi.string().min(3).max(32).required(),
   avatar: Joi.string().default(null),
   cover: Joi.string().default(null),
-  isActive: Joi.boolean().default(false),
+  isActive: Joi.boolean().default(true),
   isAdmin: Joi.boolean().default(false),
   createdAt: Joi.date().timestamp().default(Date.now()),
   updatedAt: Joi.date().timestamp().default(null),

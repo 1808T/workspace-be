@@ -42,6 +42,23 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const user = await db.users.findOne(req.userId);
+    if (user.isAdmin) {
+      next();
+    } else {
+      res
+        .status(httpStatusCode.UNAUTHORIZED)
+        .json({ message: 'Unauthorized.' });
+    }
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const verifyOwner = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -87,6 +104,7 @@ const verifyMember = async (req, res, next) => {
 const authMiddleware = {
   generateToken,
   verifyToken,
+  verifyAdmin,
   verifyOwner,
   verifyMember,
 };
