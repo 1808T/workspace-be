@@ -1,5 +1,6 @@
 import httpStatusCode from '../utils/constants.util.js';
 import adminService from '../services/admin.service.js';
+import { db } from '../configs/db.config.js';
 
 const signUp = async (req, res) => {
   try {
@@ -17,7 +18,6 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
   try {
     const { user, matchPassword, token } = await adminService.signIn(req.body);
-    console.log(user);
 
     if (!user)
       return res
@@ -72,6 +72,34 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getBoardDetail = async (req, res) => {
+  try {
+    const boardId = req.params.id;
+    const board = await adminService.getBoardDetail(boardId);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully get board.', board });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const updateBoard = async (req, res) => {
+  try {
+    const boardId = req.params.id;
+    const updatedBoard = await adminService.updateBoard(boardId, req.body);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully updated board.', updatedBoard });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const deleteBoard = async (req, res) => {
   try {
     const boardId = req.params.id;
@@ -102,13 +130,33 @@ const updateUser = async (req, res) => {
   }
 };
 
+const getStatistic = async (req, res) => {
+  try {
+    const statistic = await adminService.getStatistic();
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully getStatistic.',
+      statistic,
+    });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getAnalytic = async (req, res) => {};
+
 const adminController = {
   signIn,
   signUp,
   getWorkspaces,
   getUsers,
+  getBoardDetail,
+  updateBoard,
   deleteBoard,
   updateUser,
+  getStatistic,
+  getAnalytic,
 };
 
 export default adminController;
