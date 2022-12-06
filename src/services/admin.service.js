@@ -97,6 +97,55 @@ const getUsers = async () => {
   }
 };
 
+const getBoardDetail = async (boardId) => {
+  try {
+    const result = await await db.boards
+      .aggregate([
+        { $match: { _id: new ObjectId(boardId) } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'owner',
+            foreignField: '_id',
+            pipeline: [{ $project: { avatar: 1, username: 1 } }],
+            as: 'owner',
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'members',
+            foreignField: '_id',
+            pipeline: [{ $project: { avatar: 1, username: 1 } }],
+            as: 'members',
+          },
+        },
+      ])
+      .toArray();
+    return result[0];
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const updateBoard = async (boardId, data) => {
+  try {
+    const updateData = { ...data, updatedAt: Date.now() };
+    const result = await db.boards.findOneAndUpdate(
+      { _id: new ObjectId(boardId) },
+      { $set: updateData },
+      { returnDocument: 'after' },
+    );
+    if (result.value) {
+      return result.value;
+    } else {
+      throw new Error('No document found.');
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const deleteBoard = async (boardId) => {
   try {
     const data = { updatedAt: Date.now(), _destroy: true };
@@ -135,13 +184,34 @@ const updateUser = async (userId, data) => {
   }
 };
 
+const getStatistic = async () => {
+  try {
+    const totalUsers = await db.users.find({}).count();
+    const totalTasks = await db.cards.find({}).count();
+    const totalFinishTasks = await db.cards.find({ isCompleted: true }).count();
+    const totalTodayTasks = await db.cards
+      .aggregate([
+        { $addFields: { createdDate: { $day: { $toDate: '$createdAt' } } } },
+      ])
+      .toArray();
+    console.log(totalTodayTasks);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getAnalytic = async () => {};
+
 const adminService = {
   signIn,
   signUp,
   getWorkspaces,
   getUsers,
+  getBoardDetail,
+  updateBoard,
   deleteBoard,
   updateUser,
+  getStatistic,
 };
 
 export default adminService;
