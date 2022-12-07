@@ -1,5 +1,6 @@
 import httpStatusCode from '../utils/constants.util.js';
 import adminService from '../services/admin.service.js';
+import { db } from '../configs/db.config.js';
 
 const signUp = async (req, res) => {
   try {
@@ -17,7 +18,6 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
   try {
     const { user, matchPassword, token } = await adminService.signIn(req.body);
-    console.log(user);
 
     if (!user)
       return res
@@ -72,6 +72,20 @@ const getUsers = async (req, res) => {
   }
 };
 
+const updateBoard = async (req, res) => {
+  try {
+    const boardId = req.params.id;
+    const updatedBoard = await adminService.updateBoard(boardId, req.body);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully updated board.', updatedBoard });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const deleteBoard = async (req, res) => {
   try {
     const boardId = req.params.id;
@@ -102,13 +116,44 @@ const updateUser = async (req, res) => {
   }
 };
 
+const getStatistic = async (req, res) => {
+  try {
+    const statistic = await adminService.getStatistic();
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get statistic.',
+      statistic,
+    });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const getAnalytic = async (req, res) => {
+  try {
+    const analytic = await adminService.getAnalytic();
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get analytic.',
+      analytic,
+    });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const adminController = {
   signIn,
   signUp,
   getWorkspaces,
   getUsers,
+  updateBoard,
   deleteBoard,
   updateUser,
+  getStatistic,
+  getAnalytic,
 };
 
 export default adminController;

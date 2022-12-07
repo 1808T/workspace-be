@@ -6,6 +6,7 @@ import { hashPassword, comparePassword } from '../utils/bcrypt.js';
 import { ObjectId } from 'mongodb';
 import listService from './list.service.js';
 import cardService from './card.service.js';
+import { toDate, getWeek, toTimeStamp } from '../utils/convert-date.util.js';
 
 const signUp = async (data) => {
   try {
@@ -97,6 +98,29 @@ const getUsers = async () => {
   }
 };
 
+const updateBoard = async (boardId, data) => {
+  try {
+    const updateData = { ...data, updatedAt: Date.now() };
+    if (updateData.members && updateData.members.length !== 0) {
+      updateData.members.forEach(
+        (member, index) => (updateData.members[index] = new ObjectId(member)),
+      );
+    }
+    const result = await db.boards.findOneAndUpdate(
+      { _id: new ObjectId(boardId) },
+      { $set: updateData },
+      { returnDocument: 'after' },
+    );
+    if (result.value) {
+      return result.value;
+    } else {
+      throw new Error('No document found.');
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const deleteBoard = async (boardId) => {
   try {
     const data = { updatedAt: Date.now(), _destroy: true };
@@ -135,13 +159,103 @@ const updateUser = async (userId, data) => {
   }
 };
 
+const getStatistic = async () => {
+  try {
+    const totalUsers = await db.users.countDocuments();
+    const totalTasks = await db.cards.countDocuments();
+    const totalFinishTasks = await db.cards.countDocuments({
+      isCompleted: true,
+    });
+    const currentDate = toDate(Date.now());
+    const todayTasks = await db.cards
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    const totalTodayTasks = todayTasks.filter(
+      (task) => toDate(task.createdAt) === currentDate,
+    ).length;
+    return { totalUsers, totalTasks, totalFinishTasks, totalTodayTasks };
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getAnalytic = async () => {
+  try {
+    const currentWeek = getWeek(new Date());
+    const weeklyCreatedTasks = await db.cards
+      .aggregate([
+        { $addFields: { createdWeek: { $week: { $toDate: '$createdAt' } } } },
+        { $match: { createdWeek: currentWeek } },
+        { $sort: { createdWeek: -1 } },
+        {
+          $addFields: { dayOfWeek: { $dayOfWeek: { $toDate: '$createdAt' } } },
+        },
+        { $project: { title: 1, dayOfWeek: 1 } },
+      ])
+      .toArray();
+    const weeklyFinishedTasks = await db.cards
+      .aggregate([
+        { $match: { _destroy: false, isCompleted: true } },
+        { $addFields: { endWeek: { $week: { $toDate: '$endedAt' } } } },
+        { $match: { endWeek: currentWeek } },
+        { $sort: { endWeek: -1 } },
+        {
+          $addFields: { dayOfWeek: { $dayOfWeek: { $toDate: '$createdAt' } } },
+        },
+        { $project: { title: 1, dayOfWeek: 1 } },
+      ])
+      .toArray();
+    const weeklyNewUsers = await db.users
+      .aggregate([
+        { $addFields: { createdWeek: { $week: { $toDate: '$createdAt' } } } },
+        { $match: { createdWeek: currentWeek } },
+        { $sort: { createdWeek: -1 } },
+        {
+          $addFields: { dayOfWeek: { $dayOfWeek: { $toDate: '$createdAt' } } },
+        },
+        { $project: { username: 1, dayOfWeek: 1 } },
+      ])
+      .toArray();
+
+    return {
+      weeklyCreatedTasks: weeklyCreatedTasks.reduce(
+        (result, task) => {
+          result[task.dayOfWeek] = result[task.dayOfWeek] + 1;
+          return result;
+        },
+        { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 },
+      ),
+      weeklyFinishedTasks: weeklyFinishedTasks.reduce(
+        (result, task) => {
+          result[task.dayOfWeek] = result[task.dayOfWeek] + 1;
+          return result;
+        },
+        { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 },
+      ),
+      weeklyNewUsers: weeklyNewUsers.reduce(
+        (result, user) => {
+          result[user.dayOfWeek] = result[user.dayOfWeek] + 1;
+          return result;
+        },
+        { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 },
+      ),
+    };
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const adminService = {
   signIn,
   signUp,
   getWorkspaces,
   getUsers,
+  updateBoard,
   deleteBoard,
   updateUser,
+  getStatistic,
+  getAnalytic,
 };
 
 export default adminService;
