@@ -28,6 +28,12 @@ const signIn = async (req, res) => {
         .status(httpStatusCode.BAD_REQUEST)
         .json({ message: 'Wrong password!' });
 
+    if (!user.isActive)
+      return res.status(httpStatusCode.UNAUTHORIZED).json({
+        message:
+          'Your account has been deactivated. Please contact admin for more information.',
+      });
+
     delete user.password;
 
     res

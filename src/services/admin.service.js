@@ -57,8 +57,13 @@ const signIn = async (data) => {
   }
 };
 
-const getWorkspaces = async () => {
+const getWorkspaces = async (page) => {
   try {
+    const workspacesPerPage = 5;
+    const totalPages = Math.ceil(
+      (await db.boards.countDocuments({})) / workspacesPerPage,
+    );
+    const skipWorkspaces = workspacesPerPage * (page - 1);
     const workspaces = await db.boards
       .aggregate([
         {
@@ -79,20 +84,31 @@ const getWorkspaces = async () => {
             as: 'members',
           },
         },
+        { $sort: { title: 1 } },
       ])
+      .skip(skipWorkspaces)
+      .limit(workspacesPerPage)
       .toArray();
-    return workspaces;
+    return { workspaces, totalPages };
   } catch (error) {
     throw new Error(error);
   }
 };
 
-const getUsers = async () => {
+const getUsers = async (page) => {
   try {
+    const usersPerPage = 5;
+    const totalPages = Math.ceil(
+      (await db.users.countDocuments({ isAdmin: false })) / usersPerPage,
+    );
+    const skipUsers = usersPerPage * (page - 1);
     const users = await db.users
       .find({ isAdmin: false }, { projection: { password: 0 } })
+      .sort({ username: 1 })
+      .skip(skipUsers)
+      .limit(usersPerPage)
       .toArray();
-    return users;
+    return { users, totalPages };
   } catch (error) {
     throw new Error(error);
   }
