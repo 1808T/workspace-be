@@ -48,10 +48,14 @@ const signIn = async (req, res) => {
 
 const getWorkspaces = async (req, res) => {
   try {
-    const workspaces = await adminService.getWorkspaces();
-    res
-      .status(httpStatusCode.OK)
-      .json({ message: 'Successfully get workspaces.', workspaces });
+    const { workspaces, totalPages } = await adminService.getWorkspaces(
+      req.query.page,
+    );
+    res.status(httpStatusCode.OK).json({
+      message: 'Successfully get workspaces.',
+      workspaces,
+      totalPages,
+    });
   } catch (error) {
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
@@ -61,10 +65,10 @@ const getWorkspaces = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const users = await adminService.getUsers();
+    const { users, totalPages } = await adminService.getUsers(req.query.page);
     res
       .status(httpStatusCode.OK)
-      .json({ message: 'Successfully get users.', users });
+      .json({ message: 'Successfully get users.', users, totalPages });
   } catch (error) {
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR)
