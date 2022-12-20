@@ -46,10 +46,12 @@ const signIn = async (req, res) => {
   }
 };
 
-const getWorkspaces = async (req, res) => {
+const getBoards = async (req, res) => {
   try {
-    const { workspaces, totalPages } = await adminService.getWorkspaces(
+    const { workspaces, totalPages } = await adminService.getBoards(
       req.query.page,
+      req.query.sort,
+      req.query.ascendingOrder,
     );
     res.status(httpStatusCode.OK).json({
       message: 'Successfully get workspaces.',
@@ -65,7 +67,11 @@ const getWorkspaces = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const { users, totalPages } = await adminService.getUsers(req.query.page);
+    const { users, totalPages } = await adminService.getUsers(
+      req.query.page,
+      req.query.sort,
+      req.query.ascendingOrder,
+    );
     res
       .status(httpStatusCode.OK)
       .json({ message: 'Successfully get users.', users, totalPages });
@@ -148,16 +154,46 @@ const getAnalytic = async (req, res) => {
   }
 };
 
+const searchBoard = async (req, res) => {
+  try {
+    const { workspaceTitle } = req.body;
+    const searchedBoards = await adminService.searchBoard(workspaceTitle);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully search boards.', searchedBoards });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+const searchUser = async (req, res) => {
+  try {
+    const { username } = req.body;
+    const searchedUsers = await adminService.searchUser(username);
+    res
+      .status(httpStatusCode.OK)
+      .json({ message: 'Successfully search boards.', searchedUsers });
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const adminController = {
   signIn,
   signUp,
-  getWorkspaces,
+  getBoards,
   getUsers,
   updateBoard,
   deleteBoard,
   updateUser,
   getStatistic,
   getAnalytic,
+  searchBoard,
+  searchUser,
 };
 
 export default adminController;

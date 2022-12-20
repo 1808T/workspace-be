@@ -6,7 +6,7 @@ import { hashPassword, comparePassword } from '../utils/bcrypt.js';
 import { ObjectId } from 'mongodb';
 import listService from './list.service.js';
 import cardService from './card.service.js';
-import { toDate, getWeek, toTimeStamp } from '../utils/convert-date.util.js';
+import { toDate, getWeek } from '../utils/convert-date.util.js';
 
 const signUp = async (data) => {
   try {
@@ -57,15 +57,30 @@ const signIn = async (data) => {
   }
 };
 
-const getWorkspaces = async (page) => {
+const getBoards = async (page, sortField, ascendingOrder) => {
+  let order = 1;
   try {
     const workspacesPerPage = 5;
     const totalPages = Math.ceil(
       (await db.boards.countDocuments({})) / workspacesPerPage,
     );
     const skipWorkspaces = workspacesPerPage * (page - 1);
+    if (ascendingOrder === 'true') {
+      order = 1;
+    } else {
+      order = -1;
+    }
     const workspaces = await db.boards
       .aggregate([
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'owner',
+            foreignField: '_id',
+            pipeline: [{ $project: { _id: 0, username: 1 } }],
+            as: 'ownerUsername',
+          },
+        },
         {
           $lookup: {
             from: 'users',
@@ -84,7 +99,7 @@ const getWorkspaces = async (page) => {
             as: 'members',
           },
         },
-        { $sort: { title: 1 } },
+        { $sort: { [sortField]: order } },
       ])
       .skip(skipWorkspaces)
       .limit(workspacesPerPage)
@@ -95,8 +110,14 @@ const getWorkspaces = async (page) => {
   }
 };
 
-const getUsers = async (page) => {
+const getUsers = async (page, sortField, ascendingOrder) => {
+  let order = 1;
   try {
+    if (ascendingOrder === 'true') {
+      order = 1;
+    } else {
+      order = -1;
+    }
     const usersPerPage = 5;
     const totalPages = Math.ceil(
       (await db.users.countDocuments({ isAdmin: false })) / usersPerPage,
@@ -104,7 +125,7 @@ const getUsers = async (page) => {
     const skipUsers = usersPerPage * (page - 1);
     const users = await db.users
       .find({ isAdmin: false }, { projection: { password: 0 } })
-      .sort({ username: 1 })
+      .sort({ [sortField]: order })
       .skip(skipUsers)
       .limit(usersPerPage)
       .toArray();
@@ -177,7 +198,7 @@ const updateUser = async (userId, data) => {
 
 const getStatistic = async () => {
   try {
-    const totalUsers = await db.users.countDocuments();
+    const totalUsers = await db.users.countDocuments({ isAdmin: false });
     const totalTasks = await db.cards.countDocuments();
     const totalFinishTasks = await db.cards.countDocuments({
       isCompleted: true,
@@ -224,6 +245,7 @@ const getAnalytic = async () => {
       .toArray();
     const weeklyNewUsers = await db.users
       .aggregate([
+        { $match: { isAdmin: false } },
         { $addFields: { createdWeek: { $week: { $toDate: '$createdAt' } } } },
         { $match: { createdWeek: currentWeek } },
         { $sort: { createdWeek: -1 } },
@@ -262,16 +284,67 @@ const getAnalytic = async () => {
   }
 };
 
+const searchBoard = async (data) => {
+  const trimData = data.trim();
+  const query = new RegExp(trimData, 'i');
+  try {
+    const result = await db.boards
+      .aggregate([
+        { $match: { title: { $regex: query } } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'owner',
+            foreignField: '_id',
+            pipeline: [{ $project: { avatar: 1, username: 1 } }],
+            as: 'owner',
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'members',
+            foreignField: '_id',
+            pipeline: [{ $project: { avatar: 1, username: 1 } }],
+            as: 'members',
+          },
+        },
+      ])
+      .toArray();
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const searchUser = async (data) => {
+  const trimData = data.trim();
+  const query = new RegExp(trimData, 'i');
+  try {
+    const result = await db.users
+      .find(
+        { username: { $regex: query }, isAdmin: false },
+        { projection: { password: 0 } },
+      )
+      .toArray();
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const adminService = {
   signIn,
   signUp,
-  getWorkspaces,
+  getBoards,
   getUsers,
   updateBoard,
   deleteBoard,
   updateUser,
   getStatistic,
   getAnalytic,
+  searchBoard,
+  searchUser,
 };
 
 export default adminService;
