@@ -20,10 +20,16 @@ adminRouter.get(
   adminController.getAnalytic,
 );
 adminRouter.get(
-  '/workspaces',
+  '/board',
   authMiddleware.verifyToken,
   authMiddleware.verifyAdmin,
-  adminController.getWorkspaces,
+  adminController.getBoards,
+);
+adminRouter.post(
+  '/board/search',
+  authMiddleware.verifyToken,
+  authMiddleware.verifyAdmin,
+  adminController.searchBoard,
 );
 adminRouter.put(
   '/board/:id',
@@ -38,10 +44,16 @@ adminRouter.delete(
   adminController.deleteBoard,
 );
 adminRouter.get(
-  '/users',
+  '/user',
   authMiddleware.verifyToken,
   authMiddleware.verifyAdmin,
   adminController.getUsers,
+);
+adminRouter.post(
+  '/user/search',
+  authMiddleware.verifyToken,
+  authMiddleware.verifyAdmin,
+  adminController.searchUser,
 );
 adminRouter.put(
   '/user/:id',
