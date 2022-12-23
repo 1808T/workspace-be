@@ -238,7 +238,7 @@ const getAnalytic = async () => {
         { $match: { endWeek: currentWeek } },
         { $sort: { endWeek: -1 } },
         {
-          $addFields: { dayOfWeek: { $dayOfWeek: { $toDate: '$createdAt' } } },
+          $addFields: { dayOfWeek: { $dayOfWeek: { $toDate: '$endedAt' } } },
         },
         { $project: { title: 1, dayOfWeek: 1 } },
       ])

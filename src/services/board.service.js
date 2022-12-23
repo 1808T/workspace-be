@@ -208,7 +208,7 @@ const getBoardProgress = async (id) => {
           { members: { $in: [id] }, _destroy: false },
         ],
       })
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .limit(2)
       .toArray();
     if (boards.length === 2) {
