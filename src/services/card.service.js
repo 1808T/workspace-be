@@ -73,7 +73,7 @@ const updateCard = async (id, data) => {
   }
 };
 
-const deleteCard = async (id) => {
+const deleteCard = async (id, payload) => {
   try {
     const data = { updatedAt: Date.now(), _destroy: true };
     const result = await db.cards.findOneAndUpdate(
@@ -81,9 +81,17 @@ const deleteCard = async (id) => {
       { $set: data },
       { returnDocument: 'after' },
     );
+    console.log(payload);
 
     if (result.value) {
-      return result.value;
+      const listId = result.value.listId;
+      const cardsOrder = payload.map((cardId) => new ObjectId(cardId));
+      const updatedList = await listService.updateList(listId, { cardsOrder });
+
+      return {
+        deletedCard: result.value,
+        updatedCardsOrder: updatedList.cardsOrder,
+      };
     } else {
       throw new Error('No document found.');
     }

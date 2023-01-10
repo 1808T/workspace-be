@@ -37,11 +37,15 @@ const updateCard = async (req, res) => {
 const deleteCard = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedCard = await cardService.deleteCard(id);
+    const { deletedCard, updatedCardsOrder } = await cardService.deleteCard(
+      id,
+      req.body,
+    );
 
     res.status(httpStatusCode.OK).json({
       message: 'Successfully deleted card.',
       deletedCard,
+      updatedCardsOrder,
     });
   } catch (error) {
     res
