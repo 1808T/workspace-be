@@ -101,12 +101,32 @@ const verifyMember = async (req, res, next) => {
   }
 };
 
+const verifyCommentAuthor = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    const comment = await db.comments.findOne({ _id: new ObjectId(id) });
+    if (userId.toString() === comment.author.toString()) {
+      next();
+    } else {
+      res
+        .status(httpStatusCode.UNAUTHORIZED)
+        .json({ message: 'Unauthorized.' });
+    }
+  } catch (error) {
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const authMiddleware = {
   generateToken,
   verifyToken,
   verifyAdmin,
   verifyOwner,
   verifyMember,
+  verifyCommentAuthor,
 };
 
 export default authMiddleware;
